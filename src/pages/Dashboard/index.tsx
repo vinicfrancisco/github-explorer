@@ -1,4 +1,5 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { FiChevronRight } from 'react-icons/fi';
 import api from '../../services/api';
 
@@ -18,7 +19,22 @@ interface Repository {
 const Dashboard: React.FC = () => {
   const [newRepo, setNewRepo] = useState('');
   const [inputError, setInputError] = useState('');
-  const [repositories, setRepositories] = useState<Repository[]>([]);
+  const [repositories, setRepositories] = useState<Repository[]>(() => {
+    const storagedRepos = localStorage.getItem('@githubExplorer:repositories');
+
+    if (storagedRepos) {
+      return JSON.parse(storagedRepos);
+    }
+
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      '@githubExplorer:repositories',
+      JSON.stringify(repositories)
+    );
+  }, [repositories]);
 
   async function handleAddRepository(
     event: FormEvent<HTMLFormElement>
@@ -46,6 +62,7 @@ const Dashboard: React.FC = () => {
   return (
     <>
       <img src={logoImage} alt="Github Explorer" />
+
       <Title>Explore repositórios no Github</Title>
 
       <Form hasError={!!inputError} onSubmit={handleAddRepository}>
@@ -54,6 +71,7 @@ const Dashboard: React.FC = () => {
           value={newRepo}
           onChange={(e) => setNewRepo(e.target.value)}
         />
+
         <button type="submit">Pesquisar</button>
       </Form>
 
@@ -61,7 +79,7 @@ const Dashboard: React.FC = () => {
 
       <Repositories>
         {repositories.map((repo) => (
-          <a key={repo.full_name} href="test">
+          <Link key={repo.full_name} to={`/repositories/${repo.full_name}`}>
             <img src={repo.owner.avatar_url} alt={repo.owner.login} />
 
             <div>
@@ -70,7 +88,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             <FiChevronRight size={20} />
-          </a>
+          </Link>
         ))}
       </Repositories>
     </>
